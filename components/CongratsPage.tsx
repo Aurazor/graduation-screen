@@ -6,6 +6,10 @@ interface Props {
     name: string;
 }
 
+const VIDEO_WIDTH = 720;
+const VIDEO_HEIGHT = 1280;
+
+
 export default function CongratsPage({ name }: Props) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [showText, setShowText] = useState(false);
@@ -81,19 +85,26 @@ export default function CongratsPage({ name }: Props) {
                 </button>
 
                 {showText && (
-                    <div className="overlay" style={{
+                    <div className="invitation-card" style={{
                         position: "absolute",
-                        top: 0, left: 0, right: 0, bottom: 0,
+                        top: "33.6%",     // right below the crest
+                        left: "13.2%",    // paper's left edge
+                        right: "14.6%",   // paper's right edge (100 - 85.4)
+                        bottom: "20.3%",  // paper's bottom edge (100 - 79.7)
                         display: "flex",
+                        flexDirection: "column",
                         alignItems: "center",
-                        justifyContent: "center",
+                        justifyContent: "flex-start",
+                        textAlign: "center",
+                        padding: "4% 6%",
+                        overflow: "hidden",     // prevents overflow outside the paper
                         animation: "fadeIn 1.2s ease forwards",
                     }}>
                         <div className="invitation-card" style={{
                             textAlign: "center",
                             padding: "32px 28px",
                             width: "88%",
-                            marginTop: "180px",
+                            // marginTop: "180px",
                         }}>
 
                             {/* Class of */}
