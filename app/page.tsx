@@ -1,11 +1,15 @@
-import CongratsPage from "@/components/CongratsPage";
+import InvitationExperience from "@/components/invitation-experience";
+import { formatStudentName } from "@/lib/student-name";
 
-interface PageProps {
-  searchParams: Promise<{ name?: string }>;
-}
+type InvitationPageProps = {
+  searchParams: Promise<{ studentName?: string | string[] }>;
+};
 
-export default async function Home({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const name = params.name ? decodeURIComponent(params.name) : "Graduate";
-  return <CongratsPage name={name} />;
+/** Visit /?studentName=Ashley%20Jantjies */
+export default async function InvitationPage({
+                                               searchParams,
+                                             }: InvitationPageProps) {
+  const { studentName } = await searchParams;
+
+  return <InvitationExperience studentName={formatStudentName(studentName)} />;
 }

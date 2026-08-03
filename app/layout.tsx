@@ -1,24 +1,44 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { Cormorant_Garamond, Great_Vibes } from "next/font/google";
+import { invitation, invitationVideo } from "@/lib/invitation-details";
 import "./globals.css";
 
+const displaySerif = Cormorant_Garamond({
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700"],
+    variable: "--font-display-serif",
+});
+
+const scriptFont = Great_Vibes({
+    subsets: ["latin"],
+    weight: "400",
+    variable: "--font-script",
+});
+
 export const metadata: Metadata = {
-    title: "Matric Farewell 2026",
+    title: `${invitation.eventName} 2026 · ${invitation.schoolName}`,
+    description: `${invitation.classOf} — you are invited to the ${invitation.eventName}.`,
+    openGraph: {
+        title: `${invitation.eventName} 2026`,
+        description: `${invitation.classOf} — an invitation from ${invitation.schoolName}.`,
+        images: [invitationVideo.poster],
+    },
+};
+
+export const viewport: Viewport = {
+    themeColor: "#0b1f16",
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    viewportFit: "cover",
 };
 
 export default function RootLayout({
                                        children,
-                                   }: {
-    children: React.ReactNode;
-}) {
+                                   }: Readonly<{ children: React.ReactNode }>) {
     return (
-        <html lang="en" style={{ height: "100%" }}>
-        <head>
-            <link
-                href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap"
-                rel="stylesheet"
-            />
-        </head>
-        <body style={{ height: "100%" }}>
+        <html lang="en">
+        <body className={`${displaySerif.variable} ${scriptFont.variable}`}>
         {children}
         </body>
         </html>

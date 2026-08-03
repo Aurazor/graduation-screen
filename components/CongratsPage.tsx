@@ -55,7 +55,7 @@ export default function CongratsPage({ name }: Props) {
                     playsInline
                     style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                 >
-                    <source src="/greeting.mp4" type="video/mp4" />
+                    <source src="/video/greeting.mp4" type="video/mp4" />
                 </video>
 
                 {/* MUTE / UNMUTE BUTTON */}

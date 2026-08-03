@@ -1,23 +1,136 @@
 @import "tailwindcss";
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+:root {
+  --ink: #3a2c20;
+  --school-green: #14432d;
+  --parchment: #f2e6cd;
 }
 
-html, body {
-  width: 100%;
+html,
+body {
   height: 100%;
-  background: black;
+  margin: 0;
+  background: #0b1f16;
+  color: var(--parchment);
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.css-glass {
-  /* From https://css.glass */
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+body {
+  overflow: hidden;
+}
+
+.font-serif-display {
+  font-family: var(--font-display-serif), Georgia, "Times New Roman", serif;
+}
+
+.font-script {
+  font-family: var(--font-script), var(--font-display-serif), cursive;
+}
+
+/*
+ * Two CSS containers drive every font size in the overlay:
+ * `.video-frame` is exactly the video's on-screen box, and `.letter-container`
+ * is exactly the writing area of the letter. Using `cqw` inside them means the
+ * text scales with the artwork instead of with the phone's screen.
+ */
+.video-frame {
+  container-type: size;
+}
+
+.letter-container {
+  container-type: inline-size;
+}
+
+/* ---------- Greeting (sized against the video frame) ---------- */
+
+.greeting-hello {
+  font-size: 5.4cqw;
+}
+
+.greeting-name {
+  font-size: 12cqw;
+}
+
+/* ---------- Letter (sized against the letter's writing area) ---------- */
+
+.letter-eyebrow {
+  font-size: 6.2cqw;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em; /* balances the trailing letter-space so it stays centred */
+  line-height: 1.2;
+}
+
+.letter-lead {
+  font-size: 5.4cqw;
+  line-height: 1.25;
+  margin-bottom: 1.6cqw;
+}
+
+.letter-title {
+  font-size: 12cqw;
+  margin-bottom: 1.6cqw;
+  white-space: nowrap;
+}
+
+.letter-host {
+  font-size: 5.2cqw;
+  line-height: 1.25;
+}
+
+.letter-rule {
+  display: block;
+  width: 38%;
+  height: 1px;
+  margin: 5cqw 0;
+  background: color-mix(in srgb, var(--school-green) 55%, transparent);
+}
+
+.letter-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 3cqw;
+  margin: 0;
+}
+
+.letter-fact {
+  font-size: 5cqw;
+  line-height: 1.2;
+}
+
+.letter-fact dd {
+  margin: 0;
+}
+
+.letter-note {
+  font-size: 4.2cqw;
+  line-height: 1.35;
+  opacity: 0.85;
+}
+
+/* ---------- Buttons ---------- */
+
+.wax-seal-button {
+  background: radial-gradient(circle at 35% 30%, #b0342c, #6d1a16);
+  box-shadow:
+          0 10px 30px rgba(0, 0, 0, 0.45),
+          inset 0 2px 6px rgba(255, 255, 255, 0.25);
+}
+
+.wax-seal-button:active {
+  transform: scale(0.96);
+}
+
+.control-button {
+  display: flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(11, 31, 22, 0.55);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(242, 230, 205, 0.25);
+  font-size: 1.1rem;
+  line-height: 1;
 }
