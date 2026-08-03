@@ -38,6 +38,17 @@ body {
   container-type: size;
 }
 
+/*
+ * Tailwind's preflight applies `max-width: 100%` to media, which would clamp the
+ * video back to the screen width while the overlay above keeps its full frame
+ * width - the video and the text would then no longer line up. The frame box is
+ * calculated at the video's own aspect ratio, so it is safe to opt out.
+ */
+.invitation-video {
+  max-width: none;
+  object-fit: cover;
+}
+
 .letter-container {
   container-type: inline-size;
 }

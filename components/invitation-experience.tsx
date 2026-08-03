@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import GreetingOverlay from "@/components/greeting-overlay";
 import InvitationLetter from "@/components/invitation-letter";
 import TapToOpenScreen from "@/components/tap-to-open-screen";
@@ -64,6 +64,25 @@ export default function InvitationExperience({
         void video.play();
     };
 
+    /**
+     * The exact box the video and the overlay both occupy. Sharing one object
+     * guarantees they can never drift apart.
+     *
+     * `maxWidth: "none"` is inline on purpose: Tailwind's preflight sets
+     * `max-width: 100%` on media, which would otherwise squash the video back to
+     * the screen width while the overlay above kept its full frame width. An
+     * inline style always beats a stylesheet rule, so this holds no matter how the
+     * CSS is bundled.
+     */
+    const frameStyle: CSSProperties = frameRect
+        ? {
+            left: frameRect.left,
+            top: frameRect.top,
+            width: frameRect.width,
+            height: frameRect.height,
+        }
+        : { left: 0, top: 0, width: "100%", height: "100%" };
+
     return (
         <main className="fixed inset-0 overflow-hidden bg-[radial-gradient(circle_at_50%_35%,#2c4a3a,#0b1f16)]">
             <video
@@ -75,31 +94,17 @@ export default function InvitationExperience({
                 disablePictureInPicture
                 onPlaying={() => setIsPlaying(true)}
                 onEnded={() => setHasFinished(true)}
-                className={`absolute transition-opacity duration-300 ${
+                className={`invitation-video absolute transition-opacity duration-300 ${
                     frameRect ? "opacity-100" : "opacity-0"
                 }`}
-                style={
-                    frameRect
-                        ? {
-                            left: frameRect.left,
-                            top: frameRect.top,
-                            width: frameRect.width,
-                            height: frameRect.height,
-                        }
-                        : { left: 0, top: 0, width: "100%", height: "100%" }
-                }
+                style={{ ...frameStyle, maxWidth: "none", objectFit: "cover" }}
             />
 
             {/* Shares the video's exact box, so percentages inside land on the letter. */}
             {frameRect && (
                 <div
                     className="video-frame pointer-events-none absolute"
-                    style={{
-                        left: frameRect.left,
-                        top: frameRect.top,
-                        width: frameRect.width,
-                        height: frameRect.height,
-                    }}
+                    style={frameStyle}
                 >
                     <GreetingOverlay
                         studentName={studentName}
