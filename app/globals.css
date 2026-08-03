@@ -121,6 +121,22 @@ body {
   transform: scale(0.96);
 }
 
+.seal-spinner {
+  display: block;
+  height: 1.6rem;
+  width: 1.6rem;
+  border-radius: 9999px;
+  border: 2px solid rgba(246, 236, 216, 0.35);
+  border-top-color: #f6ecd8;
+  animation: seal-spin 0.9s linear infinite;
+}
+
+@keyframes seal-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .control-button {
   display: flex;
   height: 2.75rem;

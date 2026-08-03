@@ -4,20 +4,31 @@ import { invitation, invitationVideo } from "@/lib/invitation-details";
 
 type TapToOpenScreenProps = {
     studentName: string;
-    isVideoReady: boolean;
+    /** True once the seal has been tapped and the video is starting. */
+    isOpening: boolean;
+    /** True once the video is really playing - the screen fades away. */
+    isHidden: boolean;
     onOpen: () => void;
 };
 
 /**
  * Phones only allow sound after a real tap, so the experience always starts here.
+ * The button is never disabled: iOS will not pre-buffer a video, so waiting for
+ * it to report "ready" would leave the seal stuck on a loading state forever.
  */
 export default function TapToOpenScreen({
                                             studentName,
-                                            isVideoReady,
+                                            isOpening,
+                                            isHidden,
                                             onOpen,
                                         }: TapToOpenScreenProps) {
     return (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-8 text-center">
+        <div
+            className={`absolute inset-0 z-30 flex flex-col items-center justify-center px-8 text-center transition-opacity duration-500 ${
+                isHidden ? "pointer-events-none opacity-0" : "opacity-100"
+            }`}
+            aria-hidden={isHidden}
+        >
             <div
                 className="absolute inset-0 scale-110 bg-cover bg-center blur-md"
                 style={{ backgroundImage: `url(${invitationVideo.poster})` }}
@@ -41,14 +52,13 @@ export default function TapToOpenScreen({
                 <button
                     type="button"
                     onClick={onOpen}
-                    disabled={!isVideoReady}
-                    className="wax-seal-button font-serif-display mt-2 flex h-32 w-32 items-center justify-center rounded-full text-sm uppercase tracking-[0.2em] text-[#f6ecd8] transition disabled:opacity-60"
+                    className="wax-seal-button font-serif-display mt-2 flex h-32 w-32 items-center justify-center rounded-full text-sm uppercase tracking-[0.2em] text-[#f6ecd8] transition"
                 >
-                    {isVideoReady ? "Open" : "Loading"}
+                    {isOpening ? <span className="seal-spinner" /> : "Open"}
                 </button>
 
                 <p className="font-serif-display text-xs tracking-[0.18em] text-[#e7d8b5]/70">
-                    Best with your sound on
+                    {isOpening ? "Unsealing…" : "Best with your sound on"}
                 </p>
             </div>
         </div>

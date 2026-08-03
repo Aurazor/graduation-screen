@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type RefObject } from "react";
+import { useEffect, useState } from "react";
 import {
     invitationVideo,
     minVisibleVideoHeight,
@@ -15,59 +15,79 @@ export type FrameRect = {
 };
 
 /**
- * Works out the exact box the video should occupy inside the stage.
+ * Works out the exact box the video should occupy on screen.
  *
- * It fills the screen like `object-fit: cover`, but stops zooming in once the
- * sides of the letter would be cropped away. The video element and the text
- * overlay are both given this box, so a percentage inside the overlay always
- * points at the same spot in the video - on any phone size.
+ * It measures `window.visualViewport` - the part of the page the person can
+ * actually see - instead of relying on `100dvh`, which some Android browsers
+ * report differently from the visible area and which left green bands above and
+ * below the video. The stage itself is `position: fixed; inset: 0`, so these
+ * numbers can be used directly as the video's `left` / `top`.
+ *
+ * The video fills that visible box like `object-fit: cover`, but stops zooming
+ * in once the sides of the letter would be cropped away. The video element and
+ * the text overlay are given the same box, so a percentage inside the overlay
+ * always points at the same spot in the video - on any phone size.
  */
-export function useVideoFrameRect(
-    stageRef: RefObject<HTMLElement | null>,
-): FrameRect | null {
+export function useVideoFrameRect(): FrameRect | null {
     const [frameRect, setFrameRect] = useState<FrameRect | null>(null);
 
     useEffect(() => {
-        const stage = stageRef.current;
-        if (!stage) return;
-
         const measureFrame = () => {
-            const { width: stageWidth, height: stageHeight } =
-                stage.getBoundingClientRect();
-            if (!stageWidth || !stageHeight) return;
+            const viewport = window.visualViewport;
+            const visibleWidth = viewport?.width ?? window.innerWidth;
+            const visibleHeight = viewport?.height ?? window.innerHeight;
+            const offsetLeft = viewport?.offsetLeft ?? 0;
+            const offsetTop = viewport?.offsetTop ?? 0;
+            if (!visibleWidth || !visibleHeight) return;
 
             const coverScale = Math.max(
-                stageWidth / invitationVideo.width,
-                stageHeight / invitationVideo.height,
+                visibleWidth / invitationVideo.width,
+                visibleHeight / invitationVideo.height,
             );
             const maxScaleKeepingLetterVisible = Math.min(
-                stageWidth / (invitationVideo.width * minVisibleVideoWidth),
-                stageHeight / (invitationVideo.height * minVisibleVideoHeight),
+                visibleWidth / (invitationVideo.width * minVisibleVideoWidth),
+                visibleHeight / (invitationVideo.height * minVisibleVideoHeight),
             );
             const scale = Math.min(coverScale, maxScaleKeepingLetterVisible);
 
             const width = invitationVideo.width * scale;
             const height = invitationVideo.height * scale;
 
-            setFrameRect({
-                left: (stageWidth - width) / 2,
-                top: (stageHeight - height) / 2,
-                width,
-                height,
+            setFrameRect((previous) => {
+                const next = {
+                    left: offsetLeft + (visibleWidth - width) / 2,
+                    top: offsetTop + (visibleHeight - height) / 2,
+                    width,
+                    height,
+                };
+                const isSameBox =
+                    previous &&
+                    Math.abs(previous.left - next.left) < 0.5 &&
+                    Math.abs(previous.top - next.top) < 0.5 &&
+                    Math.abs(previous.width - next.width) < 0.5 &&
+                    Math.abs(previous.height - next.height) < 0.5;
+                return isSameBox ? previous : next;
             });
         };
 
         measureFrame();
-        const observer = new ResizeObserver(measureFrame);
-        observer.observe(stage);
-        // Covers iOS toolbar show/hide, which does not always fire a resize on the element.
+        // Safari settles its viewport a moment after first paint.
+        const settleTimer = window.setTimeout(measureFrame, 300);
+
+        const viewport = window.visualViewport;
+        viewport?.addEventListener("resize", measureFrame);
+        viewport?.addEventListener("scroll", measureFrame);
+        window.addEventListener("resize", measureFrame);
         window.addEventListener("orientationchange", measureFrame);
 
         return () => {
-            observer.disconnect();
+            window.clearTimeout(settleTimer);
+            viewport?.removeEventListener("resize", measureFrame);
+            viewport?.removeEventListener("scroll", measureFrame);
+            window.removeEventListener("resize", measureFrame);
             window.removeEventListener("orientationchange", measureFrame);
         };
-    }, [stageRef]);
+    }, []);
 
     return frameRect;
 }

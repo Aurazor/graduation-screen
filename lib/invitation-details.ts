@@ -36,10 +36,12 @@ export const letterWritingArea = {
 /**
  * The video fills the screen like `object-fit: cover`, but we never zoom in so
  * far that less than this share of the video is still on screen. The width rule
- * keeps the letter whole on very tall phones; the height rule does the same on
- * wide screens (a laptop), where the sides are filled with the page background.
+ * keeps the letter whole on very tall phones (0.76 is the paper's own width plus
+ * a hair, so tall 20:9 and 21:9 phones still get an edge-to-edge video); the
+ * height rule does the same on wide screens, where the sides are filled with the
+ * page background.
  */
-export const minVisibleVideoWidth = 0.82;
+export const minVisibleVideoWidth = 0.76;
 export const minVisibleVideoHeight = 0.66;
 
 export type InvitationFact = {

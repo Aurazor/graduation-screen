@@ -15,36 +15,38 @@ type InvitationExperienceProps = {
 export default function InvitationExperience({
                                                  studentName,
                                              }: InvitationExperienceProps) {
-    const stageRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const frameRect = useVideoFrameRect();
 
-    const frameRect = useVideoFrameRect(stageRef);
-    const [hasOpened, setHasOpened] = useState(false);
-    const [isVideoReady, setIsVideoReady] = useState(false);
+    const [hasTapped, setHasTapped] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [hasFinished, setHasFinished] = useState(false);
 
-    const passedCues = usePassedVideoCues(videoRef, videoCues, hasOpened);
+    const passedCues = usePassedVideoCues(videoRef, videoCues, hasTapped);
     const isGreetingVisible =
         passedCues.greetingAppears && !passedCues.greetingFades;
 
-    /** The tap that lets the browser play the video with its sound on. */
-    const openInvitation = async () => {
+    /**
+     * The tap that lets the browser play the video with its sound on.
+     * `play()` is called straight away, while the tap still counts as a user
+     * gesture - iOS will not buffer the video before this happens, which is why
+     * nothing here waits for the video to be ready first.
+     */
+    const openInvitation = () => {
         const video = videoRef.current;
         if (!video) return;
 
-        setHasOpened(true);
+        setHasTapped(true);
         video.muted = false;
         setIsMuted(false);
 
-        try {
-            await video.play();
-        } catch {
-            // Some phones (low power mode) refuse sound - fall back to a silent play.
+        video.play().catch(() => {
+            // Some phones (iOS Low Power Mode) refuse sound - fall back to silent play.
             video.muted = true;
             setIsMuted(true);
-            await video.play().catch(() => undefined);
-        }
+            video.play().catch(() => setHasTapped(false));
+        });
     };
 
     const toggleSound = () => {
@@ -63,10 +65,7 @@ export default function InvitationExperience({
     };
 
     return (
-        <main
-            ref={stageRef}
-            className="relative h-[100dvh] w-full overflow-hidden bg-[radial-gradient(circle_at_50%_35%,#2c4a3a,#0b1f16)]"
-        >
+        <main className="fixed inset-0 overflow-hidden bg-[radial-gradient(circle_at_50%_35%,#2c4a3a,#0b1f16)]">
             <video
                 ref={videoRef}
                 src={invitationVideo.src}
@@ -74,7 +73,7 @@ export default function InvitationExperience({
                 playsInline
                 preload="auto"
                 disablePictureInPicture
-                onCanPlayThrough={() => setIsVideoReady(true)}
+                onPlaying={() => setIsPlaying(true)}
                 onEnded={() => setHasFinished(true)}
                 className={`absolute transition-opacity duration-300 ${
                     frameRect ? "opacity-100" : "opacity-0"
@@ -110,7 +109,7 @@ export default function InvitationExperience({
                 </div>
             )}
 
-            {hasOpened && (
+            {isPlaying && (
                 <div className="absolute bottom-6 right-5 z-20 flex flex-col gap-3">
                     <button
                         type="button"
@@ -133,13 +132,14 @@ export default function InvitationExperience({
                 </div>
             )}
 
-            {!hasOpened && (
-                <TapToOpenScreen
-                    studentName={studentName}
-                    isVideoReady={isVideoReady}
-                    onOpen={openInvitation}
-                />
-            )}
+            {/* Stays up until the video really starts, so a slow connection never
+          leaves a blank screen. */}
+            <TapToOpenScreen
+                studentName={studentName}
+                isOpening={hasTapped}
+                isHidden={isPlaying}
+                onOpen={openInvitation}
+            />
         </main>
     );
 }
