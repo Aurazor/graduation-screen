@@ -16,11 +16,18 @@ const scriptFont = Great_Vibes({
 });
 
 export const metadata: Metadata = {
-    title: `${invitation.eventName} 2026 · ${invitation.schoolName}`,
-    description: `${invitation.classOf} — you are invited to the ${invitation.eventName}.`,
+    /**
+     * Set NEXT_PUBLIC_SITE_URL to your real domain so the preview image resolves
+     * when the link is shared on WhatsApp or Instagram.
+     */
+    metadataBase: new URL(
+        process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+    ),
+    title: `${invitation.eventName.text} 2026 · ${invitation.schoolName}`,
+    description: `${invitation.classOf.text} — you are invited to the ${invitation.eventName.text}.`,
     openGraph: {
-        title: `${invitation.eventName} 2026`,
-        description: `${invitation.classOf} — an invitation from ${invitation.schoolName}.`,
+        title: `${invitation.eventName.text} 2026`,
+        description: `${invitation.classOf.text} — an invitation from ${invitation.schoolName}.`,
         images: [invitationVideo.poster],
     },
 };

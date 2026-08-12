@@ -49,20 +49,48 @@ export type InvitationFact = {
     value: string;
     /** Optional second line, e.g. the venue's former name. */
     note?: string;
+    /** Seconds into the voiceover where this line is spoken. */
+    spokenAt: number;
 };
 
 const invitationFacts: InvitationFact[] = [
-    { label: "Date", value: "23 September 2026" },
-    { label: "Time", value: "18h00" },
-    { label: "Theme", value: "Bridgerton" },
-    { label: "Venue", value: "The Light House", note: "(Old CRC Church)" },
+    { label: "Date", value: "23 September 2026", spokenAt: 10.04 },
+    { label: "Time", value: "18h00", spokenAt: 11.81 },
+    { label: "Theme", value: "Bridgerton", spokenAt: 13.99 },
+    {
+        label: "Venue",
+        value: "The Light House",
+        note: "(Old CRC Church)",
+        spokenAt: 16.5,
+    },
 ];
 
+/**
+ * The invitation text. Each `spokenAt` is the moment that line begins in
+ * invitation-voiceover.mp3, measured from the recording itself - the line is
+ * written onto the paper exactly as the narrator says it.
+ */
 export const invitation = {
     schoolName: "William Pescod High School",
-    classOf: "Class of 2026",
-    leadIn: "You are hereby invited to the",
-    eventName: "Matric Farewell",
-    hostLine: "of William Pescod High School",
+    classOf: { text: "Class of 2026", spokenAt: 0 },
+    leadIn: { text: "You are hereby invited to the", spokenAt: 3.38 },
+    eventName: { text: "Matric Farewell", spokenAt: 5.5 },
+    hostLine: { text: "of William Pescod High School", spokenAt: 6.98 },
     facts: invitationFacts,
+};
+
+export const invitationAudio = {
+    musicSrc: "/audio/background-music.mp3",
+    voiceoverSrc: "/audio/invitation-voiceover.mp3",
+    /** Real length of the voiceover, used to fade the music back up at the end. */
+    voiceoverDurationSeconds: 22.2,
+    /** Video time at which the narrator starts - just after the letter settles. */
+    voiceoverStartsAt: 9.1,
+    /** Music level on its own, and the lower level it drops to under the speech. */
+    musicLevel: 0.5,
+    musicLevelUnderVoiceover: 0.14,
+    /** How long the music takes to duck, lift and fade out. */
+    fadeSeconds: 1.2,
+    /** Quiet tail after the last word before the music fades away. */
+    outroSeconds: 3,
 };

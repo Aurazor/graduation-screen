@@ -1,12 +1,40 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import gsap from "gsap";
+import type { ReactNode } from "react";
 import { invitation, letterWritingArea } from "@/lib/invitation-details";
 
 type InvitationLetterProps = {
+    /** How far into the voiceover the narrator is, in seconds. */
+    spokenSeconds: number;
     isVisible: boolean;
 };
+
+type SpokenLineProps = {
+    spokenAt: number;
+    spokenSeconds: number;
+    className?: string;
+    children: ReactNode;
+};
+
+/** One line of the invitation, written onto the paper as it is spoken. */
+function SpokenLine({
+                        spokenAt,
+                        spokenSeconds,
+                        className = "",
+                        children,
+                    }: SpokenLineProps) {
+    const hasBeenSpoken = spokenSeconds >= spokenAt;
+
+    return (
+        <p
+            className={`letter-line ${className} ${
+                hasBeenSpoken ? "letter-line-written" : ""
+            }`}
+        >
+            {children}
+        </p>
+    );
+}
 
 /**
  * Sits exactly on the blank part of the letter in the video's final frame.
@@ -16,39 +44,14 @@ type InvitationLetterProps = {
  * a share of the letter's own width. That is what keeps the whole
  * "Class of 2026" block inside the paper on every phone size.
  */
-export default function InvitationLetter({ isVisible }: InvitationLetterProps) {
-    const letterRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (!isVisible) return;
-        const letter = letterRef.current;
-        if (!letter) return;
-
-        const prefersReducedMotion = window.matchMedia(
-            "(prefers-reduced-motion: reduce)",
-        ).matches;
-
-        const animation = gsap.context(() => {
-            gsap.fromTo(
-                ".letter-line",
-                { opacity: 0, y: prefersReducedMotion ? 0 : 12, filter: "blur(6px)" },
-                {
-                    opacity: 1,
-                    y: 0,
-                    filter: "blur(0px)",
-                    duration: prefersReducedMotion ? 0.3 : 0.85,
-                    stagger: prefersReducedMotion ? 0 : 0.18,
-                    ease: "power2.out",
-                },
-            );
-        }, letter);
-
-        return () => animation.revert();
-    }, [isVisible]);
+export default function InvitationLetter({
+                                             spokenSeconds,
+                                             isVisible,
+                                         }: InvitationLetterProps) {
+    const lastFact = invitation.facts[invitation.facts.length - 1];
 
     return (
         <div
-            ref={letterRef}
             className={`letter-container absolute flex flex-col items-center justify-center text-center transition-opacity duration-500 ${
                 isVisible ? "opacity-100" : "opacity-0"
             }`}
@@ -60,36 +63,79 @@ export default function InvitationLetter({ isVisible }: InvitationLetterProps) {
             }}
             aria-hidden={!isVisible}
         >
-            <p className="letter-line letter-eyebrow font-serif-display font-semibold uppercase text-[var(--school-green)]">
-                {invitation.classOf}
-            </p>
+            <SpokenLine
+                spokenAt={invitation.classOf.spokenAt}
+                spokenSeconds={spokenSeconds}
+                className="letter-eyebrow font-serif-display font-semibold uppercase text-[var(--school-green)]"
+            >
+                {invitation.classOf.text}
+            </SpokenLine>
 
-            <span className="letter-line letter-rule" />
+            <span
+                className={`letter-rule ${
+                    spokenSeconds >= invitation.classOf.spokenAt
+                        ? "letter-line-written"
+                        : "letter-line"
+                }`}
+            />
 
-            <p className="letter-line letter-lead font-serif-display text-[var(--ink)]">
-                {invitation.leadIn}
-            </p>
+            <SpokenLine
+                spokenAt={invitation.leadIn.spokenAt}
+                spokenSeconds={spokenSeconds}
+                className="letter-lead font-serif-display text-[var(--ink)]"
+            >
+                {invitation.leadIn.text}
+            </SpokenLine>
 
-            <h2 className="letter-line letter-title font-serif-display font-bold leading-[1.05] text-[var(--school-green)]">
-                {invitation.eventName}
-            </h2>
+            <SpokenLine
+                spokenAt={invitation.eventName.spokenAt}
+                spokenSeconds={spokenSeconds}
+                className="letter-title font-serif-display font-bold text-[var(--school-green)]"
+            >
+                {invitation.eventName.text}
+            </SpokenLine>
 
-            <p className="letter-line letter-host font-serif-display text-[var(--ink)]">
-                {invitation.hostLine}
-            </p>
+            <SpokenLine
+                spokenAt={invitation.hostLine.spokenAt}
+                spokenSeconds={spokenSeconds}
+                className="letter-host font-serif-display text-[var(--ink)]"
+            >
+                {invitation.hostLine.text}
+            </SpokenLine>
 
-            <span className="letter-line letter-rule" />
+            <span
+                className={`letter-rule ${
+                    spokenSeconds >= invitation.hostLine.spokenAt
+                        ? "letter-line-written"
+                        : "letter-line"
+                }`}
+            />
 
             <dl className="letter-facts font-serif-display text-[var(--ink)]">
                 {invitation.facts.map((fact) => (
-                    <div key={fact.label} className="letter-line letter-fact">
-                        <dt className="inline">{fact.label}</dt>
+                    <SpokenLine
+                        key={fact.label}
+                        spokenAt={fact.spokenAt}
+                        spokenSeconds={spokenSeconds}
+                        className="letter-fact"
+                    >
+                        <span className="letter-fact-label">{fact.label}</span>
                         <span aria-hidden> · </span>
-                        <dd className="inline">{fact.value}</dd>
+                        <span>{fact.value}</span>
                         {fact.note && <span className="letter-note block">{fact.note}</span>}
-                    </div>
+                    </SpokenLine>
                 ))}
             </dl>
+
+            {/* Screen readers get the whole invitation at once, not word by word. */}
+            <p className="sr-only">
+                {invitation.classOf.text}. {invitation.leadIn.text}{" "}
+                {invitation.eventName.text} {invitation.hostLine.text}.{" "}
+                {invitation.facts
+                    .map((fact) => `${fact.label}: ${fact.value}`)
+                    .join(". ")}
+                {lastFact?.note ? ` ${lastFact.note}` : ""}
+            </p>
         </div>
     );
 }

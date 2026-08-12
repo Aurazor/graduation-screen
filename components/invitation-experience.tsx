@@ -1,12 +1,18 @@
 "use client";
 
-import { useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import GreetingOverlay from "@/components/greeting-overlay";
 import InvitationLetter from "@/components/invitation-letter";
 import TapToOpenScreen from "@/components/tap-to-open-screen";
+import { useInvitationAudio } from "@/hooks/use-invitation-audio";
 import { usePassedVideoCues } from "@/hooks/use-passed-video-cues";
+import { useSpokenSeconds } from "@/hooks/use-spoken-seconds";
 import { useVideoFrameRect } from "@/hooks/use-video-frame-rect";
-import { invitationVideo, videoCues } from "@/lib/invitation-details";
+import {
+    invitationAudio,
+    invitationVideo,
+    videoCues,
+} from "@/lib/invitation-details";
 
 type InvitationExperienceProps = {
     studentName: string;
@@ -17,63 +23,89 @@ export default function InvitationExperience({
                                              }: InvitationExperienceProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const frameRect = useVideoFrameRect();
+    const {
+        musicRef,
+        voiceoverRef,
+        unlockOnTap,
+        startVoiceover,
+        finishAfterVoiceover,
+        setMuted,
+        rewind,
+    } = useInvitationAudio();
 
     const [hasTapped, setHasTapped] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
+    const [isSpeaking, setIsSpeaking] = useState(false);
     const [hasFinished, setHasFinished] = useState(false);
 
     const passedCues = usePassedVideoCues(videoRef, videoCues, hasTapped);
+    const spokenSeconds = useSpokenSeconds(voiceoverRef, isSpeaking);
     const isGreetingVisible =
         passedCues.greetingAppears && !passedCues.greetingFades;
 
     /**
-     * The tap that lets the browser play the video with its sound on.
-     * `play()` is called straight away, while the tap still counts as a user
-     * gesture - iOS will not buffer the video before this happens, which is why
-     * nothing here waits for the video to be ready first.
+     * The video is silent - the music carries the opening - so the narrator is
+     * cued off the video's own clock as the letter finishes settling.
+     */
+    useEffect(() => {
+        if (!hasTapped || isSpeaking) return;
+        const video = videoRef.current;
+        if (!video) return;
+
+        let frameId = 0;
+        const waitForCue = () => {
+            if (video.currentTime >= invitationAudio.voiceoverStartsAt) {
+                setIsSpeaking(true);
+                startVoiceover();
+                return;
+            }
+            frameId = requestAnimationFrame(waitForCue);
+        };
+
+        frameId = requestAnimationFrame(waitForCue);
+        return () => cancelAnimationFrame(frameId);
+    }, [hasTapped, isSpeaking, startVoiceover]);
+
+    /**
+     * The tap that lets the browser play audio at all. Everything here runs
+     * synchronously, while the tap still counts as a user gesture - iOS will not
+     * buffer media before this happens, which is why nothing waits for readiness.
      */
     const openInvitation = () => {
         const video = videoRef.current;
         if (!video) return;
 
         setHasTapped(true);
-        video.muted = false;
-        setIsMuted(false);
-
-        video.play().catch(() => {
-            // Some phones (iOS Low Power Mode) refuse sound - fall back to silent play.
-            video.muted = true;
-            setIsMuted(true);
-            video.play().catch(() => setHasTapped(false));
-        });
+        unlockOnTap();
+        video.play().catch(() => setHasTapped(false));
     };
 
     const toggleSound = () => {
-        const video = videoRef.current;
-        if (!video) return;
-        video.muted = !video.muted;
-        setIsMuted(video.muted);
+        const nextMuted = !isMuted;
+        setIsMuted(nextMuted);
+        setMuted(nextMuted);
     };
 
     const replayInvitation = () => {
         const video = videoRef.current;
         if (!video) return;
-        video.currentTime = 0;
+
         setHasFinished(false);
+        setIsSpeaking(false);
+        rewind();
+        video.currentTime = 0;
         void video.play();
     };
 
-    /**
-     * The exact box the video and the overlay both occupy. Sharing one object
-     * guarantees they can never drift apart.
+    /** The exact box the video and the text overlay both occupy. Sharing one
+     *  object guarantees they can never drift apart.
      *
-     * `maxWidth: "none"` is inline on purpose: Tailwind's preflight sets
-     * `max-width: 100%` on media, which would otherwise squash the video back to
-     * the screen width while the overlay above kept its full frame width. An
-     * inline style always beats a stylesheet rule, so this holds no matter how the
-     * CSS is bundled.
-     */
+     *  `maxWidth: "none"` is inline on purpose: Tailwind's preflight sets
+     *  `max-width: 100%` on media, which would otherwise squash the video back to
+     *  the screen width while the overlay kept its full frame width. An inline
+     *  style always beats a stylesheet rule, so this holds however the CSS is
+     *  bundled. */
     const frameStyle: CSSProperties = frameRect
         ? {
             left: frameRect.left,
@@ -90,14 +122,25 @@ export default function InvitationExperience({
                 src={invitationVideo.src}
                 poster={invitationVideo.poster}
                 playsInline
+                muted
                 preload="auto"
                 disablePictureInPicture
                 onPlaying={() => setIsPlaying(true)}
-                onEnded={() => setHasFinished(true)}
                 className={`invitation-video absolute transition-opacity duration-300 ${
                     frameRect ? "opacity-100" : "opacity-0"
                 }`}
                 style={{ ...frameStyle, maxWidth: "none", objectFit: "cover" }}
+            />
+
+            <audio ref={musicRef} src={invitationAudio.musicSrc} preload="auto" loop />
+            <audio
+                ref={voiceoverRef}
+                src={invitationAudio.voiceoverSrc}
+                preload="auto"
+                onEnded={() => {
+                    setHasFinished(true);
+                    finishAfterVoiceover();
+                }}
             />
 
             {/* Shares the video's exact box, so percentages inside land on the letter. */}
@@ -110,7 +153,10 @@ export default function InvitationExperience({
                         studentName={studentName}
                         isVisible={Boolean(isGreetingVisible)}
                     />
-                    <InvitationLetter isVisible={Boolean(passedCues.letterAppears)} />
+                    <InvitationLetter
+                        spokenSeconds={spokenSeconds}
+                        isVisible={Boolean(passedCues.letterAppears)}
+                    />
                 </div>
             )}
 
