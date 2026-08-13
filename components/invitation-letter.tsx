@@ -9,26 +9,26 @@ type InvitationLetterProps = {
     isVisible: boolean;
 };
 
-type SpokenLineProps = {
-    spokenAt: number;
+type RevealedLineProps = {
+    revealAt: number;
     spokenSeconds: number;
     className?: string;
     children: ReactNode;
 };
 
-/** One line of the invitation, written onto the paper as it is spoken. */
-function SpokenLine({
-                        spokenAt,
-                        spokenSeconds,
-                        className = "",
-                        children,
-                    }: SpokenLineProps) {
-    const hasBeenSpoken = spokenSeconds >= spokenAt;
+/** One line of the invitation, written onto the paper on its cue. */
+function RevealedLine({
+                          revealAt,
+                          spokenSeconds,
+                          className = "",
+                          children,
+                      }: RevealedLineProps) {
+    const hasBeenRevealed = spokenSeconds >= revealAt;
 
     return (
         <p
             className={`letter-line ${className} ${
-                hasBeenSpoken ? "letter-line-written" : ""
+                hasBeenRevealed ? "letter-line-written" : ""
             }`}
         >
             {children}
@@ -63,49 +63,49 @@ export default function InvitationLetter({
             }}
             aria-hidden={!isVisible}
         >
-            <SpokenLine
-                spokenAt={invitation.classOf.spokenAt}
+            <RevealedLine
+                revealAt={invitation.classOf.revealAt}
                 spokenSeconds={spokenSeconds}
                 className="letter-eyebrow font-serif-display font-semibold uppercase text-[var(--school-green)]"
             >
                 {invitation.classOf.text}
-            </SpokenLine>
+            </RevealedLine>
 
             <span
                 className={`letter-rule ${
-                    spokenSeconds >= invitation.classOf.spokenAt
+                    spokenSeconds >= invitation.classOf.revealAt
                         ? "letter-line-written"
                         : "letter-line"
                 }`}
             />
 
-            <SpokenLine
-                spokenAt={invitation.leadIn.spokenAt}
+            <RevealedLine
+                revealAt={invitation.leadIn.revealAt}
                 spokenSeconds={spokenSeconds}
                 className="letter-lead font-serif-display text-[var(--ink)]"
             >
                 {invitation.leadIn.text}
-            </SpokenLine>
+            </RevealedLine>
 
-            <SpokenLine
-                spokenAt={invitation.eventName.spokenAt}
+            <RevealedLine
+                revealAt={invitation.eventName.revealAt}
                 spokenSeconds={spokenSeconds}
                 className="letter-title font-serif-display font-bold text-[var(--school-green)]"
             >
                 {invitation.eventName.text}
-            </SpokenLine>
+            </RevealedLine>
 
-            <SpokenLine
-                spokenAt={invitation.hostLine.spokenAt}
+            <RevealedLine
+                revealAt={invitation.hostLine.revealAt}
                 spokenSeconds={spokenSeconds}
                 className="letter-host font-serif-display text-[var(--ink)]"
             >
                 {invitation.hostLine.text}
-            </SpokenLine>
+            </RevealedLine>
 
             <span
                 className={`letter-rule ${
-                    spokenSeconds >= invitation.hostLine.spokenAt
+                    spokenSeconds >= invitation.hostLine.revealAt
                         ? "letter-line-written"
                         : "letter-line"
                 }`}
@@ -113,9 +113,9 @@ export default function InvitationLetter({
 
             <dl className="letter-facts font-serif-display text-[var(--ink)]">
                 {invitation.facts.map((fact) => (
-                    <SpokenLine
+                    <RevealedLine
                         key={fact.label}
-                        spokenAt={fact.spokenAt}
+                        revealAt={fact.revealAt}
                         spokenSeconds={spokenSeconds}
                         className="letter-fact"
                     >
@@ -123,7 +123,7 @@ export default function InvitationLetter({
                         <span aria-hidden> · </span>
                         <span>{fact.value}</span>
                         {fact.note && <span className="letter-note block">{fact.note}</span>}
-                    </SpokenLine>
+                    </RevealedLine>
                 ))}
             </dl>
 

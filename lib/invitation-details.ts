@@ -49,33 +49,45 @@ export type InvitationFact = {
     value: string;
     /** Optional second line, e.g. the venue's former name. */
     note?: string;
-    /** Seconds into the voiceover where this line is spoken. */
-    spokenAt: number;
+    /** Seconds into the voiceover where this line is written onto the paper. */
+    revealAt: number;
 };
 
+/** The third block: every practical detail lands together, at 9.0s. */
 const invitationFacts: InvitationFact[] = [
-    { label: "Date", value: "23 September 2026", spokenAt: 10.04 },
-    { label: "Time", value: "18h00", spokenAt: 11.81 },
-    { label: "Theme", value: "Bridgerton", spokenAt: 13.99 },
+    { label: "Date", value: "23 September 2026", revealAt: 9.0 },
+    { label: "Time", value: "18h00", revealAt: 9.2 },
+    { label: "Theme", value: "Bridgerton", revealAt: 9.4 },
     {
         label: "Venue",
         value: "The Light House",
         note: "(Old CRC Church)",
-        spokenAt: 16.5,
+        revealAt: 9.6,
     },
 ];
 
 /**
- * The invitation text. Each `spokenAt` is the moment that line begins in
- * invitation-voiceover.mp3, measured from the recording itself - the line is
- * written onto the paper exactly as the narrator says it.
+ * The invitation text. Each `revealAt` is a moment in invitation-voiceover.mp3.
+ *
+ * The narration is a Whistledown-style address - a herald announcing the event,
+ * not someone reading the letter aloud. She never states the date, time or
+ * venue, so there is nothing for a line-by-line reveal to sync to. Instead the
+ * letter writes itself in three quick blocks over the first ten seconds and
+ * then holds, complete, for the rest of her speech:
+ *
+ *   0.0s  the salutation, on "graduating class of 2026"
+ *   5.2s  the title block, as she begins "It is with the greatest pleasure"
+ *   9.0s  every practical detail, lightly staggered
+ *
+ * Keeping it fast matters because students screenshot this - the invitation has
+ * to be complete and readable long before the narration ends.
  */
 export const invitation = {
     schoolName: "William Pescod High School",
-    classOf: { text: "Class of 2026", spokenAt: 0 },
-    leadIn: { text: "You are hereby invited to the", spokenAt: 3.38 },
-    eventName: { text: "Matric Farewell", spokenAt: 5.5 },
-    hostLine: { text: "of William Pescod High School", spokenAt: 6.98 },
+    classOf: { text: "Class of 2026", revealAt: 0 },
+    leadIn: { text: "You are hereby invited to the", revealAt: 5.2 },
+    eventName: { text: "Matric Farewell", revealAt: 5.6 },
+    hostLine: { text: "of William Pescod High School", revealAt: 6.0 },
     facts: invitationFacts,
 };
 
@@ -83,7 +95,7 @@ export const invitationAudio = {
     musicSrc: "/audio/background-music.mp3",
     voiceoverSrc: "/audio/invitation-voiceover.mp3",
     /** Real length of the voiceover, used to fade the music back up at the end. */
-    voiceoverDurationSeconds: 22.2,
+    voiceoverDurationSeconds: 63.4,
     /** Video time at which the narrator starts - just after the letter settles. */
     voiceoverStartsAt: 9.1,
     /** Music level on its own, and the lower level it drops to under the speech. */
