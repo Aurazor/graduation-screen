@@ -98,9 +98,17 @@ export const invitationAudio = {
     voiceoverDurationSeconds: 63.4,
     /** Video time at which the narrator starts - just after the letter settles. */
     voiceoverStartsAt: 9.1,
-    /** Music level on its own, and the lower level it drops to under the speech. */
-    musicLevel: 0.5,
-    musicLevelUnderVoiceover: 0.14,
+    /**
+     * Music level on its own, and the level it ducks to under the narrator.
+     *
+     * Web audio volume is linear, but hearing is not: 0.08 sits roughly 22 dB
+     * below the speech, which is about the ratio film uses for score under
+     * dialogue - clearly present, never competing. Phone speakers are weakest in
+     * the low end, so music that sounds balanced on a laptop will usually swamp
+     * the voice on a handset. Test there before raising this.
+     */
+    musicLevel: 0.45,
+    musicLevelUnderVoiceover: 0.08,
     /** How long the music takes to duck, lift and fade out. */
     fadeSeconds: 1.2,
     /** Quiet tail after the last word before the music fades away. */
