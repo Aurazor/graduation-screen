@@ -101,14 +101,15 @@ export const invitationAudio = {
     /**
      * Music level on its own, and the level it ducks to under the narrator.
      *
-     * Web audio volume is linear, but hearing is not: 0.08 sits roughly 22 dB
-     * below the speech, which is about the ratio film uses for score under
-     * dialogue - clearly present, never competing. Phone speakers are weakest in
-     * the low end, so music that sounds balanced on a laptop will usually swamp
-     * the voice on a handset. Test there before raising this.
+     * Gain is linear but hearing is not: 0.04 sits roughly 28 dB below the
+     * narrator, which is quiet enough to feel like atmosphere rather than a
+     * track. Phone speakers are weakest in the low end, so music that sounds
+     * balanced on a laptop will usually swamp the voice on a handset - judge this
+     * on a phone, and if the narrator still loses, raise her level rather than
+     * dropping this further (see README).
      */
-    musicLevel: 0.45,
-    musicLevelUnderVoiceover: 0.08,
+    musicLevel: 0.4,
+    musicLevelUnderVoiceover: 0.04,
     /** How long the music takes to duck, lift and fade out. */
     fadeSeconds: 1.2,
     /** Quiet tail after the last word before the music fades away. */
