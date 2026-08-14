@@ -26,6 +26,13 @@ body {
 
 .font-script {
   font-family: var(--font-script), var(--font-display-serif), cursive;
+  /*
+   * Great Vibes trails a long swash off the end of most lowercase letters, and
+   * capitals lead with one too - so a normal space between a first and last
+   * name is swallowed and the two run together ("Le-BronnAbrahams"). A little
+   * extra word-spacing restores the gap.
+   */
+  word-spacing: 0.18em;
 }
 
 /*
@@ -53,14 +60,39 @@ body {
   container-type: inline-size;
 }
 
+/* ---------- Names on the opening screen ---------- */
+
+/*
+ * The name has to fit one line on a 320px phone whether it is "Jodi" or
+ * "Mary-Jane Van Der Merwe". `--name-length` is set from the component, and the
+ * ch-based term shrinks the type as the name grows; `clamp` keeps it within
+ * sensible bounds either way. Long names wrap rather than overflow.
+ */
+.greeting-name-large {
+  font-size: clamp(1.75rem, min(9vw, 62vw / max(var(--name-length, 12), 8)), 3.5rem);
+  line-height: 1.15;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
 /* ---------- Greeting (sized against the video frame) ---------- */
 
 .greeting-hello {
   font-size: 5.4cqw;
 }
 
+/*
+ * Same problem inside the video: 12cqw fits "Jodi" but not a double-barrelled
+ * surname. Sized against the video frame and narrowed as the name grows.
+ */
 .greeting-name {
-  font-size: 12cqw;
+  font-size: clamp(
+          5cqw,
+          min(12cqw, 130cqw / max(var(--name-length, 12), 10)),
+          12cqw
+  );
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 /* ---------- Letter (sized against the letter's writing area) ---------- */

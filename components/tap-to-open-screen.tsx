@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { invitation, invitationVideo } from "@/lib/invitation-details";
 
 type TapToOpenScreenProps = {
@@ -22,6 +23,8 @@ export default function TapToOpenScreen({
                                             isHidden,
                                             onOpen,
                                         }: TapToOpenScreenProps) {
+    const greetingText = studentName || "An invitation awaits";
+
     return (
         <div
             className={`absolute inset-0 z-30 flex flex-col items-center justify-center px-8 text-center transition-opacity duration-500 ${
@@ -41,8 +44,11 @@ export default function TapToOpenScreen({
                     {invitation.schoolName}
                 </p>
 
-                <h1 className="font-script text-5xl leading-tight text-[#f6ecd8] drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
-                    {studentName ? studentName : "An invitation awaits"}
+                <h1
+                    className="greeting-name-large font-script text-[#f6ecd8] drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]"
+                    style={{ "--name-length": greetingText.length } as CSSProperties}
+                >
+                    {greetingText}
                 </h1>
 
                 <p className="font-serif-display max-w-xs text-base leading-relaxed text-[#e7d8b5]/90">

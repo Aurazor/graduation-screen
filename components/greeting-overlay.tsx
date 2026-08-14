@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 type GreetingOverlayProps = {
     studentName: string;
     isVisible: boolean;
@@ -26,7 +28,10 @@ export default function GreetingOverlay({
                 Hello
             </p>
             {studentName && (
-                <p className="greeting-name font-script leading-[1.15] text-white drop-shadow-[0_3px_14px_rgba(0,0,0,0.7)]">
+                <p
+                    className="greeting-name font-script leading-[1.15] text-white drop-shadow-[0_3px_14px_rgba(0,0,0,0.7)]"
+                    style={{ "--name-length": studentName.length } as CSSProperties}
+                >
                     {studentName}
                 </p>
             )}
